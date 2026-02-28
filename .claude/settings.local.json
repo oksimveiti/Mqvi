@@ -17,7 +17,13 @@
       "Bash(powershell.exe:*)",
       "Bash(ls -la \"c:\\\\Users\\\\akina\\\\source\\\\repos\\\\VoidChat\\\\server\\\\database\\\\migrations\"\" 2>/dev/null || ls -la \"c:UsersakinasourcereposVoidChatservermigrations\"\")",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:docs.rs)"
+      "WebFetch(domain:docs.rs)",
+      "Bash(find /Users/semihcetin/Documents/Projects/Mqvi -name \"*macos*\" -o -name \"*design*\" 2>/dev/null | head -20)",
+      "Bash(find /Users/semihcetin/Documents/Projects/Mqvi-macOS -name \"Package.resolved\" 2>/dev/null | xargs cat 2>/dev/null | head -60)",
+      "Bash(find /Users/semihcetin/Documents/Projects/Mqvi-macOS -name \"*.xcworkspace\" -o -name \"project.pbxproj\" 2>/dev/null | head -5)",
+      "Bash(find /Users/semihcetin/Documents/Projects/Mqvi-macOS -name \"*.entitlements\" -o -name \"Info.plist\" 2>/dev/null | head -10)",
+      "Bash(grep -r \"livekit\\\\|LiveKit\" /Users/semihcetin/Documents/Projects/Mqvi-macOS --include=\"*.swift\" --include=\"*.json\" --include=\"*.pbxproj\" 2>/dev/null | head -10)",
+      "Bash(grep -r \"voice\" /Users/semihcetin/Documents/Projects/Mqvi/server --include=\"*.go\" -l 2>/dev/null | head -10)"
     ]
   }
 }

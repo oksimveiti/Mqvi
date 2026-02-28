@@ -293,7 +293,7 @@ func main() {
 	messageHandler := handlers.NewMessageHandler(messageService, uploadService, cfg.Upload.MaxSize)
 	memberHandler := handlers.NewMemberHandler(memberService)
 	roleHandler := handlers.NewRoleHandler(roleService)
-	voiceHandler := handlers.NewVoiceHandler(voiceService)
+	voiceHandler := handlers.NewVoiceHandler(voiceService, p2pCallService)
 	serverHandler := handlers.NewServerHandler(serverService)
 	inviteHandler := handlers.NewInviteHandler(inviteService)
 	pinHandler := handlers.NewPinHandler(pinService)
@@ -504,6 +504,8 @@ func main() {
 		http.HandlerFunc(voiceHandler.Token)))
 	mux.Handle("GET /api/voice/states", authMiddleware.Require(
 		http.HandlerFunc(voiceHandler.VoiceStates)))
+	mux.Handle("POST /api/voice/p2p-token", authMiddleware.Require(
+		http.HandlerFunc(voiceHandler.P2PToken)))
 
 	// Static file serving — yüklenen dosyalara erişim
 	//

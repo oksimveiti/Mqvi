@@ -51,11 +51,22 @@ type ChannelGetter interface {
 
 // ─── VoiceService Interface ───
 
+// P2PCallGetter, P2P call lookup için minimal interface (ISP).
+// P2PCallService'in GetUserCall metodunu karşılar.
+type P2PCallGetter interface {
+	GetUserCall(userID string) *models.P2PCall
+}
+
 // VoiceService, ses kanalı operasyonları için iş mantığı interface'i.
 type VoiceService interface {
 	// GenerateToken, LiveKit JWT oluşturur. Permission kontrolü içerir.
 	// displayName tercih edilen görünen isimdir — LiveKit'te participant.name olarak kullanılır.
 	GenerateToken(ctx context.Context, userID, username, displayName, channelID string) (*models.VoiceTokenResponse, error)
+
+	// GenerateP2PToken, P2P arama için LiveKit JWT oluşturur.
+	// Kullanıcının aktif aramasının callID ile eşleştiğini doğrular.
+	// Room name "p2p_{callID}" — voice kanallarıyla çakışmaz.
+	GenerateP2PToken(ctx context.Context, userID, username, displayName, callID string, p2pCalls P2PCallGetter) (*models.P2PTokenResponse, error)
 
 	// JoinChannel, kullanıcıyı ses kanalına kaydeder ve broadcast eder.
 	// Kullanıcı başka bir kanalda ise önce oradan çıkarılır.
@@ -218,6 +229,54 @@ func (s *voiceService) GenerateToken(ctx context.Context, userID, username, disp
 		Token:     token,
 		URL:       s.livekitCfg.URL,
 		ChannelID: channelID,
+	}, nil
+}
+
+// ─── P2P Token Generation ───
+
+func (s *voiceService) GenerateP2PToken(_ context.Context, userID, username, displayName, callID string, p2pCalls P2PCallGetter) (*models.P2PTokenResponse, error) {
+	// 1. Kullanıcının aktif araması callID ile eşleşmeli
+	call := p2pCalls.GetUserCall(userID)
+	if call == nil || call.ID != callID {
+		return nil, fmt.Errorf("%w: not a participant in this call", pkg.ErrForbidden)
+	}
+
+	// 2. Room name — "p2p_" prefix ile voice kanallarından ayrışır
+	roomName := "p2p_" + callID
+
+	canPublish := true
+	canSubscribe := true
+	canPublishData := true
+
+	at := auth.NewAccessToken(s.livekitCfg.APIKey, s.livekitCfg.APISecret)
+	grant := &auth.VideoGrant{
+		RoomJoin:       true,
+		Room:           roomName,
+		CanPublish:     &canPublish,
+		CanSubscribe:   &canSubscribe,
+		CanPublishData: &canPublishData,
+	}
+
+	participantName := username
+	if displayName != "" {
+		participantName = displayName
+	}
+
+	at.AddGrant(grant).
+		SetIdentity(userID).
+		SetName(participantName).
+		SetValidFor(2 * time.Hour) // P2P aramaları genellikle kısa — 2 saat yeterli
+
+	token, err := at.ToJWT()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate p2p livekit token: %w", err)
+	}
+
+	return &models.P2PTokenResponse{
+		Token:    token,
+		URL:      s.livekitCfg.URL,
+		CallID:   callID,
+		RoomName: roomName,
 	}, nil
 }
 

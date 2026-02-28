@@ -37,3 +37,18 @@ type VoiceTokenResponse struct {
 	URL       string `json:"url"`        // LiveKit WebSocket URL (ws://localhost:7880)
 	ChannelID string `json:"channel_id"` // LiveKit room name = channel ID
 }
+
+// P2PTokenRequest, P2P arama için LiveKit token isteği.
+// Client POST /api/voice/p2p-token endpoint'ine bu body'yi gönderir.
+type P2PTokenRequest struct {
+	CallID string `json:"call_id"`
+}
+
+// P2PTokenResponse, P2P arama için LiveKit token yanıtı.
+// Room name "p2p_{callID}" formatındadır — voice kanallarından ayrışır.
+type P2PTokenResponse struct {
+	Token    string `json:"token"`     // LiveKit JWT
+	URL      string `json:"url"`       // LiveKit WebSocket URL
+	CallID   string `json:"call_id"`   // P2P call ID
+	RoomName string `json:"room_name"` // LiveKit room: "p2p_{callID}"
+}
